@@ -3,3 +3,5 @@ venv/
 
 # VS Code settings
 .vscode/
+
+stopwords/tokenizers/punkt/*
