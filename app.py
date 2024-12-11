@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from nltk.corpus import stopwords
+from rouge import Rouge
 import re
 import os
 nltk.download('punkt_tab')
@@ -102,13 +103,17 @@ def select_top_sentences(sentences_dict, pagerank_scores, top_percentage=20):
     summary = [sentence['original_sentence'] for sentence in selected_sentences_sorted]
     return summary
 
-# Tính tỷ lệ chính xác của tóm tắt so với tóm tắt từ file
-def calculate_accuracy(summary, summary_sentences):
-    summary_set = set(summary)
-    summary_sentences_set = set(summary_sentences)
-    correct_count = len(summary_set.intersection(summary_sentences_set))
-    accuracy = correct_count / len(summary_sentences_set) * 100 if len(summary_sentences_set) > 0 else 0
-    return accuracy
+# Tính toán rouge_scores
+def calculate_rouge_scores(generated_summary, reference_summary):
+    rouge = Rouge()
+    scores = rouge.get_scores('\n'.join(generated_summary), '\n'.join(reference_summary), avg=True)
+    return scores
+
+# In điểm số ROUGE ở dạng phần trăm
+def print_rouge_scores(rouge_scores):
+    print("Điểm số ROUGE:")
+    for key, metrics in rouge_scores.items():
+        print(f"{key}: {{'r': {metrics['r'] * 100:.2f}%, 'p': {metrics['p'] * 100:.2f}%, 'f': {metrics['f'] * 100:.2f}%}}")
 
 # Hàm chính thực hiện toàn bộ quy trình tóm tắt văn bản
 def main():
@@ -155,9 +160,9 @@ def main():
     summary_sentences = summary_text.split('\n')
     summary_sentences = [sent.strip() for sent in summary_sentences if sent.strip()]
 
-    # Tính tỷ lệ chính xác của tóm tắt
-    accuracy = calculate_accuracy(summary, summary_sentences)
-    print(f"Tỷ lệ chính xác của tóm tắt (không theo thứ tự): {accuracy:.2f}%")
+    # Tính tỷ lệ Rouge score
+    rouge_scores = calculate_rouge_scores(summary, summary_sentences)
+    print_rouge_scores(rouge_scores)
 
 # Chạy hàm chính
 if __name__ == "__main__":
