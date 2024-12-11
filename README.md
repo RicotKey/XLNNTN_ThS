@@ -14,3 +14,7 @@ How to run ?
 #Cài thư viện
 
 > pip install -r requirements.txt
+
+#Run với lệnh
+
+> py app.py

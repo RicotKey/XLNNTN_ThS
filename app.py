@@ -4,6 +4,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from nltk.corpus import stopwords
 import re
+import os
 nltk.download('punkt_tab')
 nltk.download('stopwords')
 
@@ -78,8 +79,13 @@ def compute_pagerank(adj_matrix, damping_factor=0.85, max_iter=100, tolerance=1e
     return pagerank_scores
 
 # Chọn các câu có PageRank cao nhất
-def select_top_sentences(sentences_dict, pagerank_scores, top_n=15):  # Chọn ít câu hơn để giảm độ dài
-    top_sentence_indices = pagerank_scores.argsort()[-top_n:][::-1]
+def select_top_sentences(sentences_dict, pagerank_scores, top_percentage=20):
+    # Tính số câu tối đa dựa trên phần trăm cho trước
+    total_sentences = len(sentences_dict)
+    top_n = max(1, int(total_sentences * top_percentage / 100))  # Đảm bảo lấy ít nhất 1 câu
+
+    # Lấy chỉ số của các câu có điểm PageRank cao nhất
+    top_sentence_indices = np.argsort(pagerank_scores)[-top_n:][::-1]
     keys = list(sentences_dict.keys())
 
     selected_sentences = []
@@ -92,6 +98,7 @@ def select_top_sentences(sentences_dict, pagerank_scores, top_n=15):  # Chọn �
     # Sắp xếp lại theo thứ tự ban đầu
     selected_sentences_sorted = sorted(selected_sentences, key=lambda x: x['index'])
 
+    # Lấy câu gốc để tạo tóm tắt
     summary = [sentence['original_sentence'] for sentence in selected_sentences_sorted]
     return summary
 
@@ -105,10 +112,20 @@ def calculate_accuracy(summary, summary_sentences):
 
 # Hàm chính thực hiện toàn bộ quy trình tóm tắt văn bản
 def main():
+    # Nhận mã tài liệu từ người dùng
+    document_code = input("Nhập mã tài liệu: ")
+
+    # Đường dẫn đến file văn bản gốc và tóm tắt
+    file_path = f'./text/{document_code}'  # Sử dụng mã tài liệu để xác định file
+    summary_file_path = f'./sum/{document_code}'  # Sử dụng mã tài liệu để xác định file
+
+    # Kiểm tra xem file có tồn tại không trước khi thực hiện đọc
+    if not os.path.exists(file_path) or not os.path.exists(summary_file_path):
+        print("Lỗi: Không tìm thấy file văn bản hoặc tóm tắt tại đường dẫn chỉ định.")
+        return
+
     # Đọc file văn bản gốc và tóm tắt
-    file_path = './text/d065j'  # Đổi đường dẫn cho phù hợp
     text = read_file(file_path)
-    summary_file_path = './sum/d065j'  # Đổi đường dẫn cho phù hợp
     summary_text = read_file(summary_file_path)
 
     # Tiền xử lý văn bản và loại bỏ trùng lặp
